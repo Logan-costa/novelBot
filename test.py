@@ -14,7 +14,7 @@ speech_granite = AutoModelForSpeechSeq2Seq.from_pretrained(
 
 # prepare speech and text prompt, using the appropriate prompt template
 
-audio_path = hf_hub_download(repo_id=model_name, filename='10226_10111_000000.wav')
+audio_path = 'test.wav'
 wav, sr = torchaudio.load(audio_path, normalize=True)
 assert wav.shape[0] == 1 and sr == 16000 # mono, 16khz
 
