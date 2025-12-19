@@ -89,13 +89,16 @@ def main():
     inferenceModel, tokenizer, device = createInferenceModel() # create inference model
     voskModel, rec = createVoskModel() # create voice recognition model
 
-    print("Ready !!")
+    print("--------- Ready !! ---------")
+
+    print("Type listen to listen")
     while True:
         if("listen" == input().lower()):
             print("Listening...")
             query = listenForAudio(3, voskModel, rec)
             print("Heard:", query)
             print(processQuery(query, inferenceModel, tokenizer, device))
+            print("Type listen to listen")
         elif("exit" == input().lower()):
             break
 
