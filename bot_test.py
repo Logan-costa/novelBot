@@ -14,26 +14,43 @@ model = AutoModelForCausalLM.from_pretrained(model_path, device_map=device)
 model.eval()
 
 # change input text as desired
-system_prompt = Template("""Based on the question, you will may make one or more function/tool calls to achieve the purpose. 
+system_prompt = Template("""
+                                                  
+Based on the question, you may need to make one or more function calls to achieve the purpose. 
 You have access to the following tools:
 <tools>{{ tools }}</tools>
+                         
+Additionally, the descriptions of those tools include well defined gaps in your knowledge.
+If any prompt requires that gap in knowledge, you MUST make a tool call
+Otherwise, assume you have the required information
 
-The output MUST strictly adhere to the following format
-The example format is as follows. Please make sure the parameter type is correct. If no function call is needed, please make the tool calls an empty list '[]'.
-...(the rest of your response)
-<tool_call>[
-{"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
-...(more tool calls as required)
-]</tool_call>""") # yikes formatting, my bad
+Tool call output MUST strictly adhere to the following format.
+The example format is as follows. Please make sure the parameter type is correct.
+If no plain text response is needed (you only needed function calls), leave it as an empty string
+[
+{"function calls":  [
+                    {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
+                    ...(more tool calls as required)
+                    ]},
+{"response": "response to user prompt if no function calls are needed"}
+]
+""") # yikes formatting, my bad
+
+#[
+#{"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
+#...(more tool calls as required)
+#]
 
 tools = []
 
-def get_weather(location: str):
+def get_weather(city: str, country: str):
     """
-    gets the current weather at a specific location
+    You do not know the weather at any specific location.
+    This tool gets the current weather at a specific location
 
     Args:
-        location: the location, ex. Rochester, NY
+        city: the city
+        country: the country of the city
     Returns:
         temperature: the temp at that location in F
     """
@@ -43,8 +60,8 @@ tools.append(get_json_schema(get_weather))
 
 chat = [
 { "role": "system", "content": system_prompt.render(tools=json.dumps(tools))},
-#{ "role": "user", "content": "What is two plus four, and"},
-{ "role": "user", "content": "What is the weather in Rochester, NY"},
+#{ "role": "user", "content": "Who played Gandalf"},
+{ "role": "user", "content": "What is the weather in Rochester, USA"},
 ]
 
 chat = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)

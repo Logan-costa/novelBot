@@ -1,6 +1,8 @@
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from vosk import Model, KaldiRecognizer
+from jinja2 import Template
+from tools import get_tools
 import wave
 import json
 import queue
@@ -20,7 +22,23 @@ def createInferenceModel():
     return model, tokenizer, device
 
 def processQuery(query, model, tokenizer, device):
+    # system prompt for tool calling
+    system_prompt = Template("""Based on the question, you will may make one or more function/tool calls to achieve the purpose. 
+    You have access to the following tools:
+    <tools>{{ tools }}</tools>
+
+    The output MUST strictly adhere to the following format
+    The example format is as follows. Please make sure the parameter type is correct. If no function call is needed, please make the tool calls an empty list '[]'.
+    ...(the rest of your response)
+    [
+    {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
+    ...(more tool calls as required)
+    ]""") # yikes formatting, my bad
+
+    tools = get_tools()
+
     chat = [
+    { "role": "system", "content": system_prompt.render(tools=json.dumps(tools))},
     { "role": "user", "content": query},
     ]
 
