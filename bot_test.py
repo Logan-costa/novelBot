@@ -13,7 +13,7 @@ model.eval()
 # change input text as desired
 
 chat = [
-{ "role": "user", "content": "Who played Gandalf in Lord of the Rings"},
+{ "role": "user", "content": "What is two plus four"},
 ]
 
 chat = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
