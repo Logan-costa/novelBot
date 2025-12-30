@@ -22,6 +22,7 @@ You have access to the following tools:
                          
 Additionally, the descriptions of those tools include well defined gaps in your knowledge.
 If any prompt requires that gap in knowledge, you MUST make a tool call
+Before attempting to use your own knowledge, you MUST attempt to use tools to answer the prompt
 Otherwise, assume you have the required information
 
 Tool call output MUST strictly adhere to the following format.
@@ -31,7 +32,7 @@ If no plain text response is needed (you only needed function calls), leave it a
 {"function calls":  [
                     {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
                     ...(more tool calls as required)
-                    ]},
+                    ],
 {"response": "response to user prompt if no function calls are needed"}
 ]
 """) # yikes formatting, my bad
@@ -43,25 +44,25 @@ If no plain text response is needed (you only needed function calls), leave it a
 
 tools = []
 
-def get_weather(city: str, country: str):
+def get_weather(location: str):
     """
     You do not know the weather at any specific location.
     This tool gets the current weather at a specific location
 
     Args:
-        city: the city
-        country: the country of the city
+        location: location for the weather
     Returns:
         temperature: the temp at that location in F
     """
     print("AAHH")
 
 tools.append(get_json_schema(get_weather))
+print(tools)
 
 chat = [
 { "role": "system", "content": system_prompt.render(tools=json.dumps(tools))},
-#{ "role": "user", "content": "Who played Gandalf"},
-{ "role": "user", "content": "What is the weather in Rochester, USA"},
+#{ "role": "user", "content": "Who played Gandalf"}, # still unable to do compound requests
+{ "role": "user", "content": "Weather in Rochester usa"},
 ]
 
 chat = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)

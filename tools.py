@@ -2,13 +2,13 @@ from transformers.utils import get_json_schema
 
 tools = []
 
-def get_weather(city: str, country: str):
+def get_weather(location: str):
     """
-    gets the current weather at a specific location
+    You do not know the weather at any specific location.
+    This tool gets the current weather at a specific location
 
     Args:
-        city: the city
-        country: the country of the city
+        location: the location for the weather
     Returns:
         temperature: the temp at that location in F
     """

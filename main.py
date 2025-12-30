@@ -21,21 +21,32 @@ def createInferenceModel():
 
     return model, tokenizer, device
 
-def processQuery(query, model, tokenizer, device):
+def processQuery(query, model, tokenizer, device, tools):
     # system prompt for tool calling
-    system_prompt = Template("""Based on the question, you will may make one or more function/tool calls to achieve the purpose. 
+    system_prompt = Template("""
+                                                  
+    Based on the question, you may need to make one or more function calls to achieve the purpose. 
     You have access to the following tools:
     <tools>{{ tools }}</tools>
+                            
+    Additionally, the descriptions of those tools include well defined gaps in your knowledge.
+    If any prompt requires that gap in knowledge, you MUST make a tool call
+    Before attempting to use your own knowledge, you MUST attempt to use tools to answer the prompt
+    Otherwise, assume you have the required information
 
-    The output MUST strictly adhere to the following format
-    The example format is as follows. Please make sure the parameter type is correct. If no function call is needed, please make the tool calls an empty list '[]'.
-    ...(the rest of your response)
+    Tool call output MUST strictly adhere to the following format.
+    The example format is as follows. Please make sure the parameter type is correct.
+    If no plain text response is needed (you only needed function calls), leave it as an empty string
     [
-    {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
-    ...(more tool calls as required)
-    ]""") # yikes formatting, my bad
+    {"function calls":  [
+                        {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
+                        ...(more tool calls as required)
+                        ],
+    {"response": "response to user prompt if no function calls are needed"}
+    ]
+    """) # yikes formatting, my bad
 
-    tools = get_tools()
+    print(tools)
 
     chat = [
     { "role": "system", "content": system_prompt.render(tools=json.dumps(tools))},
@@ -106,6 +117,7 @@ def listenForAudio(seconds, model, rec):
 def main():
     inferenceModel, tokenizer, device = createInferenceModel() # create inference model
     voskModel, rec = createVoskModel() # create voice recognition model
+    tools = get_tools() # get tools available to model
 
     print("--------- Ready !! ---------")
 
@@ -115,7 +127,7 @@ def main():
             print("Listening...")
             query = listenForAudio(3, voskModel, rec)
             print("Heard:", query)
-            print(processQuery(query, inferenceModel, tokenizer, device))
+            print(processQuery(query, inferenceModel, tokenizer, device, tools))
             print("Type listen to listen")
         elif("exit" == input().lower()):
             break
