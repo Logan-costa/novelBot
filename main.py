@@ -9,6 +9,7 @@ import queue
 import pyaudio
 import time
 
+
 def createInferenceModel():
     device = "cuda"
     model_path = "./model" # ibm-granite/granite-4.0-h-350m
@@ -21,39 +22,35 @@ def createInferenceModel():
 
     return model, tokenizer, device
 
-def processQuery(query, model, tokenizer, device, tools):
-    # system prompt for tool calling
-    system_prompt = Template("""
-                                                  
-    Based on the question, you may need to make one or more function calls to achieve the purpose. 
-    You have access to the following tools:
-    <tools>{{ tools }}</tools>
-                            
-    Additionally, the descriptions of those tools include well defined gaps in your knowledge.
-    If any prompt requires that gap in knowledge, you MUST make a tool call
-    Before attempting to use your own knowledge, you MUST attempt to use tools to answer the prompt
-    Otherwise, assume you have the required information
-
-    Tool call output MUST strictly adhere to the following format.
-    The example format is as follows. Please make sure the parameter type is correct.
-    If no plain text response is needed (you only needed function calls), leave it as an empty string
-    [
-    {"function calls":  [
-                        {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
-                        ...(more tool calls as required)
-                        ],
-    {"response": "response to user prompt if no function calls are needed"}
-    ]
-    """) # yikes formatting, my bad
-
-    print(tools)
-
+def processQuery(query, model, tokenizer, device):
     chat = [
-    { "role": "system", "content": system_prompt.render(tools=json.dumps(tools))},
     { "role": "user", "content": query},
     ]
 
     chat = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
+
+    # tokenize the text
+
+    input_tokens = tokenizer(chat, return_tensors="pt").to(device)
+
+    # generate output tokens
+
+    input_length = input_tokens.input_ids.shape[-1]
+    output = model.generate(**input_tokens, max_new_tokens=200)
+    output = output[:, input_length: ]
+
+    # decode output tokens into text
+
+    output = tokenizer.batch_decode(output, skip_special_tokens = True)
+
+    return output[0]
+
+def processQueryWithTools(query, model, tokenizer, device, tools):
+    chat = [
+    { "role": "user", "content": query},
+    ]
+
+    chat = tokenizer.apply_chat_template(chat, tokenize=False, tools=tools, add_generation_prompt=True)
 
     # tokenize the text
 
@@ -117,7 +114,7 @@ def listenForAudio(seconds, model, rec):
 def main():
     inferenceModel, tokenizer, device = createInferenceModel() # create inference model
     voskModel, rec = createVoskModel() # create voice recognition model
-    tools = get_tools() # get tools available to model
+    tools, tools_dict = get_tools()
 
     print("--------- Ready !! ---------")
 
@@ -125,9 +122,29 @@ def main():
     while True:
         if("listen" == input().lower()):
             print("Listening...")
-            query = listenForAudio(3, voskModel, rec)
+            query = listenForAudio(5, voskModel, rec)
             print("Heard:", query)
-            print(processQuery(query, inferenceModel, tokenizer, device, tools))
+
+            # processing two queries in series, one with tools and one without
+            plaintextResponse = processQuery(query, inferenceModel, tokenizer, device) # processed without tools
+            toolResponse = processQueryWithTools(query, inferenceModel, tokenizer, device, tools) # processed with tools
+
+            try: # lazy approach, but I've found tool calling to be very error prone
+                # process tool response
+                toolCall = json.loads(toolResponse)
+                arg1 = toolCall["arguments"]["argument1"]
+                arg2 = toolCall["arguments"]["argument2"]
+
+                # because of how tools are defined, the first argument must appear in the query
+                # if it doesn't defualt to plain text response
+                # this is because the model tends to hallucinate tool calls even when not applicable
+                if arg1 in query:
+                    print(tools_dict[toolCall["name"]](arg1, arg2))
+                else:
+                    print(plaintextResponse)
+            except:
+                print(plaintextResponse)
+
             print("Type listen to listen")
         elif("exit" == input().lower()):
             break

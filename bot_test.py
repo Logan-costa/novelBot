@@ -16,25 +16,25 @@ model.eval()
 # change input text as desired
 system_prompt = Template("""
                                                   
-Based on the question, you may need to make one or more function calls to achieve the purpose. 
-You have access to the following tools:
-<tools>{{ tools }}</tools>
-                         
-Additionally, the descriptions of those tools include well defined gaps in your knowledge.
-If any prompt requires that gap in knowledge, you MUST make a tool call
-Before attempting to use your own knowledge, you MUST attempt to use tools to answer the prompt
-Otherwise, assume you have the required information
+    Based on the question, you may need to make one or more function calls to achieve the purpose. 
+    You have access to the following tools:
+    <tools>{{ tools }}</tools>
+                            
+    Additionally, the descriptions of those tools include well defined gaps in your knowledge.
+    If any prompt requires that gap in knowledge, you MUST make a tool call
+    Before attempting to use your own knowledge, you MUST attempt to use tools to answer the prompt
+    Otherwise, assume you have the required information
 
-Tool call output MUST strictly adhere to the following format.
-The example format is as follows. Please make sure the parameter type is correct.
-If no plain text response is needed (you only needed function calls), leave it as an empty string
-[
-{"function calls":  [
-                    {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
-                    ...(more tool calls as required)
-                    ],
-{"response": "response to user prompt if no function calls are needed"}
-]
+    Tool call output MUST strictly adhere to the following format.
+    The example format is as follows. Please make sure the parameter type is correct.
+    If no plain text response is needed (you only needed function calls), leave it as an empty string
+    [
+    {"function calls":  [
+                        {"name": "func_name1", "arguments": {"argument1": "value1", "argument2": "value2"}},
+                        ...(more tool calls as required)
+                        ],
+    {"response": "response to user prompt if no function calls are needed"}
+    ]
 """) # yikes formatting, my bad
 
 #[
@@ -62,7 +62,7 @@ print(tools)
 chat = [
 { "role": "system", "content": system_prompt.render(tools=json.dumps(tools))},
 #{ "role": "user", "content": "Who played Gandalf"}, # still unable to do compound requests
-{ "role": "user", "content": "Weather in Rochester usa"},
+{ "role": "user", "content": "what does the weather in rochester"},
 ]
 
 chat = tokenizer.apply_chat_template(chat, tokenize=False, add_generation_prompt=True)
