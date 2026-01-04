@@ -13,8 +13,7 @@ if pip doesn't recognize torch version 2.5.1+cu121 or torchaudio version 2.5.1+c
 ```
 pip install --timeout=600 torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 ```
-
-if more problems regarding this exists, see the following: https://beaithink.com/solved-how-to-fix-torch-not-compiled-with-cuda-enabled-torch-cuda-is_available-false/
+if problems persist (likely using a different python version), download the correct torch version from their website: https://pytorch.org/get-started/locally/
 
 ## Usage
 Once the "Type listen to listen" prompt shows, the program is ready to use  
