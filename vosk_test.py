@@ -6,7 +6,7 @@ import pyaudio
 
 framerate = 16000
 # create model
-model = Model(lang="en-us")
+model = Model(model_name="vosk-model-small-en-us-0.15")
 # open audio file
 wf = wave.open('test.wav', 'rb')
 #framerate = wf.framerate()
