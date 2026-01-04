@@ -1,5 +1,5 @@
 <h3>Locally hosted desktop assistant using VOSK speech recognition and IBM granite 4.0 H 350m</h3>
-Made using python 3.12.10
+Made using python 3.12.10  
 (note, git lfs required to clone repo correctly)
 
 ## Setup
