@@ -71,7 +71,7 @@ def processQueryWithTools(query, model, tokenizer, device, tools):
 def createVoskModel():
     framerate = 16000
     # create model
-    model = Model(lang="en-us")
+    model = Model(model_name="vosk-model-small-en-us-0.15")
     # create recognizer and enable words and partial words
     rec = KaldiRecognizer(model, framerate)
     rec.SetWords(True)
